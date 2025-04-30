@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Wine Gallery</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px;
+      background-color: #f4f4f4;
+    }
+    .search-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 32px;
+      gap: 16px;
+    }
+    #search {
+      width: 100%;
+      max-width: 500px;
+      padding: 12px 20px;
+      font-size: 16px;
+      border: 2px solid #3498db;
+      border-radius: 25px;
+      outline: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    #search:focus {
+      border-color: #2980b9;
+      box-shadow: 0 0 10px rgba(52,152,219,0.3);
+    }
+    .rating-slider-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      width: 100%;
+      max-width: 500px;
+      justify-content: center;
+    }
+    #ratingSlider {
+      flex-grow: 1;
+      max-width: 400px;
+    }
+    #gallery {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.3s;
+      background-color: white;
+      cursor: pointer;
+    }
+    .card:hover {
+      transform: scale(1.02);
+    }
+    .card img {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+    }
+    .card .hover-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px;
+      box-sizing: border-box;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .card:hover .hover-overlay {
+      opacity: 1;
+    }
+    .card .hover-overlay .tags {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .card .hover-overlay .tag {
+      font-size: 0.7em;
+      background: rgba(255,255,255,0.2);
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      box-sizing: border-box;
+    }
+    #modal-content {
+      background: white;
+      max-width: 600px;
+      max-height: 80vh;
+      padding: 32px;
+      border-radius: 8px;
+      text-align: center;
+      position: relative;
+      overflow-y: auto;
+    }
+    #modal-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ff4136;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+    }
+    .card .full-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+    .card .full-overlay .content {
+      background: white;
+      max-width: 600px;
+      max-height: 80vh;
+      padding: 32px;
+      border-radius: 8px;
+      text-align: center;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="search-container">
+    <input id="search" placeholder="Search tags or text…">
+    <div class="rating-slider-container">
+      <label for="ratingSlider">Minimum Rating: <span id="ratingValue">0</span> stars</label>
+      <input type="range" id="ratingSlider" min="0" max="5" step="0.25" value="0">
+    </div>
+  </div>
+
+  <div id="gallery"></div>
+
+  <div id="modal-overlay">
+    <div id="modal-content">
+      <button id="modal-close">×</button>
+      <div id="modal-details"></div>
+    </div>
+  </div>
+
+  <script>
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalContent = document.getElementById('modal-content');
+    const modalDetails = document.getElementById('modal-details');
+    const modalClose = document.getElementById('modal-close');
+
+    // Close modal when clicking outside or on close button
+    modalOverlay.addEventListener('click', (e) => {
+      if (e.target === modalOverlay) {
+        modalOverlay.style.display = 'none';
+      }
+    });
+    modalClose.addEventListener('click', () => {
+      modalOverlay.style.display = 'none';
+    });
+    let imagesData;
+
+    // 1) Load metadata
+    fetch('images.json')
+      .then(res => res.json())
+      .then(data => {
+        imagesData = data;
+        renderGallery(imagesData);
+      });
+
+    // 2) Render function
+    function renderGallery(list) {
+      const container = document.getElementById('gallery');
+      container.innerHTML = '';
+      list.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <img src="images/${item.filename}" alt="">
+          <div class="hover-overlay">
+            <div class="rating">Rating: ${item.rating}/5</div>
+            <div class="tags">${item.tags.slice(0,3).map(tag => `<span class="tag">#${tag}</span>`).join(' ')}</div>
+          </div>
+        `;
+        
+        // Add click event to show modal
+        card.addEventListener('click', () => {
+          modalDetails.innerHTML = `
+            <img src="images/${item.filename}" alt="" style="max-width: 100%; max-height: 400px; object-fit: contain;">
+            <h2>Rating: ${item.rating}/5</h2>
+            <p>${item.caption}</p>
+            <div class="tags">${item.tags.map(tag => `<span class="tag">#${tag}</span>`).join(' ')}</div>
+          `;
+          modalOverlay.style.display = 'flex';
+        });
+
+        container.appendChild(card);
+      });
+    }
+
+    // 3) Filtering
+    const searchInput = document.getElementById('search');
+    const ratingSlider = document.getElementById('ratingSlider');
+    const ratingValue = document.getElementById('ratingValue');
+
+    searchInput.addEventListener('input', applyFilters);
+    ratingSlider.addEventListener('input', applyFilters);
+
+    function applyFilters() {
+      const q = searchInput.value.toLowerCase();
+      const minRating = parseFloat(ratingSlider.value);
+      ratingValue.textContent = minRating.toFixed(2);
+
+      const filtered = imagesData.filter(item => {
+        const textMatch = item.caption.toLowerCase().includes(q)
+                        || item.tags.some(t => t.toLowerCase().includes(q));
+        const ratingMatch = item.rating >= minRating;
+        return textMatch && ratingMatch;
+      });
+      renderGallery(filtered);
+    }
+
+    // Initial render
+    applyFilters();
+  </script>
+</body>
+</html>
