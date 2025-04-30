@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <title>Wine Gallery</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       font-family: 'Arial', sans-serif;
       max-width: 1200px;
@@ -17,24 +20,31 @@
       align-items: center;
       margin-bottom: 32px;
       gap: 16px;
+      width: 100%;
     }
     #search {
       width: 100%;
       max-width: 500px;
-      padding: 12px 20px;
-      font-size: 16px;
+      padding: 20px;
+      font-size: 18px;
       border: 2px solid #3498db;
-      border-radius: 25px;
+      border-radius: 10px;
       outline: none;
       transition: all 0.3s ease;
       box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      -webkit-appearance: none;
+      appearance: none;
+      touch-action: manipulation;
+      caret-color: #3498db;
     }
     #search:focus {
       border-color: #2980b9;
-      box-shadow: 0 0 10px rgba(52,152,219,0.3);
+      box-shadow: 0 0 15px rgba(52,152,219,0.4);
+      outline: 3px solid rgba(52,152,219,0.2);
     }
     .rating-slider-container {
       display: flex;
+      flex-direction: column;
       align-items: center;
       gap: 16px;
       width: 100%;
@@ -42,13 +52,88 @@
       justify-content: center;
     }
     #ratingSlider {
-      flex-grow: 1;
-      max-width: 400px;
+      -webkit-appearance: none;
+      width: 100%;
+      height: 30px;
+      border-radius: 15px;  
+      background: #e0e0e0;
+      outline: none;
+      opacity: 0.8;
+      transition: opacity .2s;
+      touch-action: none;
+    }
+    #ratingSlider:hover {
+      opacity: 1;
+    }
+    #ratingSlider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%; 
+      background: #3498db;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      border: 3px solid white;
+    }
+    #ratingSlider::-moz-range-thumb {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #3498db;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      border: 3px solid white;
     }
     #gallery {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 16px;
+    }
+    @media screen and (max-width: 1024px) {
+      #gallery {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media screen and (max-width: 600px) {
+      #gallery {
+        grid-template-columns: 1fr;
+      }
+      .search-container {
+        padding: 0 16px;
+      }
+      #search {
+        width: 100%;
+        max-width: 100%;
+        padding: 25px;
+        font-size: 20px;
+        margin-bottom: 10px;
+      }
+      .rating-slider-container {
+        width: 100%;
+        max-width: 100%;
+        padding: 0 16px;
+      }
+      #ratingSlider {
+        height: 40px;
+      }
+      #ratingSlider::-webkit-slider-thumb {
+        width: 50px;
+        height: 50px;
+      }
+      #ratingSlider::-moz-range-thumb {
+        width: 50px;
+        height: 50px;
+      }
+      #modal-content {
+        width: 95%;
+        max-width: 95%;
+        padding: 16px;
+        margin: 0 auto;
+      }
+      body {
+        padding: 8px;
+      }
     }
     .card {
       position: relative;
