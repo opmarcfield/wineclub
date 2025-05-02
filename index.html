@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Wine Gallery</title>
   <style>
     * {
@@ -36,6 +37,20 @@
       appearance: none;
       touch-action: manipulation;
       caret-color: #3498db;
+      position: relative;
+    }
+    #search-clear {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      display: none;
+      font-size: 20px;
+      z-index: 10;
     }
     #search:focus {
       border-color: #2980b9;
@@ -44,12 +59,15 @@
     }
     .rating-slider-container {
       display: flex;
-      flex-direction: column;
       align-items: center;
       gap: 16px;
       width: 100%;
       max-width: 500px;
       justify-content: center;
+    }
+    .rating-slider-wrapper {
+      flex-grow: 1;
+      position: relative;
     }
     #ratingSlider {
       -webkit-appearance: none;
@@ -61,6 +79,19 @@
       opacity: 0.8;
       transition: opacity .2s;
       touch-action: none;
+    }
+    .rating-stars {
+      display: flex;
+      align-items: center;
+      margin-left: 16px;
+      font-size: 24px;
+    }
+    .rating-stars .star {
+      color: #ddd;
+      transition: color 0.3s;
+    }
+    .rating-stars .star.active {
+      color: #3498db;
     }
     #ratingSlider:hover {
       opacity: 1;
@@ -149,7 +180,8 @@
     }
     .card img {
       width: 100%;
-      height: 300px;
+      height: auto;
+      aspect-ratio: 4 / 3;
       object-fit: cover;
     }
     .card .hover-overlay {
@@ -249,10 +281,22 @@
 </head>
 <body>
   <div class="search-container">
-    <input id="search" placeholder="Search tags or text…">
+    <div class="search-wrapper">
+      <input id="search" placeholder="" autofocus>
+      <button id="search-clear" aria-label="Clear search">×</button>
+    </div>
     <div class="rating-slider-container">
-      <label for="ratingSlider">Minimum Rating: <span id="ratingValue">0</span> stars</label>
-      <input type="range" id="ratingSlider" min="0" max="5" step="0.25" value="0">
+      <div class="rating-slider-wrapper">
+        <label for="ratingSlider"></label>
+        <input type="range" id="ratingSlider" min="0" max="5" step="0.25" value="0">
+      </div>
+      <div class="rating-stars" id="ratingStars">
+        <span class="star">★</span>
+        <span class="star">★</span>
+        <span class="star">★</span>
+        <span class="star">★</span>
+        <span class="star">★</span>
+      </div>
     </div>
   </div>
 
@@ -298,7 +342,7 @@
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
-          <img src="images/${item.filename}" alt="">
+          <img src="images/${item.filename}"loading="lazy" alt="">
           <div class="hover-overlay">
             <div class="rating">Rating: ${item.rating}/5</div>
             <div class="tags">${item.tags.slice(0,3).map(tag => `<span class="tag">#${tag}</span>`).join(' ')}</div>
@@ -308,7 +352,7 @@
         // Add click event to show modal
         card.addEventListener('click', () => {
           modalDetails.innerHTML = `
-            <img src="images/${item.filename}" alt="" style="max-width: 100%; max-height: 400px; object-fit: contain;">
+            <img src="images/${item.filename}"loading="lazy" alt="" style="max-width: 100%; max-height: 400px; object-fit: contain;">
             <h2>Rating: ${item.rating}/5</h2>
             <p>${item.caption}</p>
             <div class="tags">${item.tags.map(tag => `<span class="tag">#${tag}</span>`).join(' ')}</div>
@@ -325,13 +369,45 @@
     const ratingSlider = document.getElementById('ratingSlider');
     const ratingValue = document.getElementById('ratingValue');
 
-    searchInput.addEventListener('input', applyFilters);
-    ratingSlider.addEventListener('input', applyFilters);
+    const searchClear = document.getElementById('search-clear');
+
+    searchInput.addEventListener('focus', () => {
+      searchInput.select();
+    });
+
+    searchInput.addEventListener('input', () => {
+      searchClear.style.display = searchInput.value ? 'block' : 'none';
+      applyFilters();
+    });
+
+    searchClear.addEventListener('click', () => {
+      searchInput.value = '';
+      searchClear.style.display = 'none';
+      applyFilters();
+      searchInput.focus();
+    });
+
+    ratingSlider.addEventListener('input', () => {
+      applyFilters();
+    });
+
+    function updateRatingStars(rating) {
+      const stars = document.querySelectorAll('.rating-stars .star');
+      stars.forEach((star, index) => {
+        if (index < Math.floor(rating)) {
+          star.classList.add('active');
+        } else {
+          star.classList.remove('active');
+        }
+      });
+    }
 
     function applyFilters() {
       const q = searchInput.value.toLowerCase();
       const minRating = parseFloat(ratingSlider.value);
-      ratingValue.textContent = minRating.toFixed(2);
+      
+      // Update visual representation
+      updateRatingStars(minRating);
 
       const filtered = imagesData.filter(item => {
         const textMatch = item.caption.toLowerCase().includes(q)
