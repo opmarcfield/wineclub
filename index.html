@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Wine Gallery</title>
+  <title>PVK Index</title>
   <style>
     * {
       box-sizing: border-box;
@@ -14,6 +14,11 @@
       margin: 0 auto;
       padding: 16px;
       background-color: #f4f4f4;
+    }
+    .search-wrapper {
+      position: relative; /* Added to make child absolute positioning work correctly */
+      width: 100%;
+      max-width: 500px; /* Ensure wrapper doesn't exceed search bar max-width */
     }
     .search-container {
       display: flex;
@@ -41,7 +46,7 @@
     }
     #search-clear {
       position: absolute;
-      right: 20px;
+      right: 25px;
       top: 50%;
       transform: translateY(-50%);
       background: none;
@@ -71,6 +76,7 @@
     }
     #ratingSlider {
       -webkit-appearance: none;
+      appearance: none;
       width: 100%;
       height: 30px;
       border-radius: 15px;  
@@ -87,12 +93,15 @@
       font-size: 24px;
     }
     .rating-stars .star {
-      color: #ddd;
-      transition: color 0.3s;
+      /* color: #ddd; */ /* Handled by gradient now */
+      /* transition: color 0.3s; */ /* Transition removed for gradient stability */
+      display: inline-block; /* For background-clip: text */
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      /* font-size: 24px; */ /* Already inherited or set by .rating-stars */
+      line-height: 1; /* Consistent height for stars */
     }
-    .rating-stars .star.active {
-      color: #3498db;
-    }
+    /* .rating-stars .star.active rule removed */
     #ratingSlider:hover {
       opacity: 1;
     }
@@ -192,12 +201,21 @@
       background: rgba(0,0,0,0.7);
       color: white;
       display: flex;
-      justify-content: space-between;
-      align-items: center;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-end;
       padding: 8px;
       box-sizing: border-box;
       opacity: 0;
       transition: opacity 0.3s;
+    }
+    .card .hover-overlay div p {
+      margin: 1px 0;
+      font-size: 0.9em;
+    }
+    .card .hover-overlay span {
+      font-size: 0.9em;
+      align-self: flex-end;
     }
     .card:hover .hover-overlay {
       opacity: 1;
@@ -213,6 +231,107 @@
       padding: 2px 4px;
       border-radius: 4px;
     }
+
+    /* Category Filter Buttons */
+    #category-filters-container {
+      display: flex;
+      justify-content: center; /* Center buttons */
+      gap: 10px; /* Space between buttons */
+      padding: 10px 0; /* Add some vertical padding */
+      margin-bottom: 20px; /* Space below the filter buttons */
+    }
+
+    .filter-button {
+      padding: 10px 15px;
+      border: 1px solid #ccc;
+      background-color: #f9f9f9;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+
+    .filter-button:hover {
+      background-color: #e9e9e9;
+    }
+
+    /* Filter Modal */
+    #filter-modal-overlay {
+      display: none; /* Hidden by default */
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7); /* Darker overlay */
+      z-index: 1001; /* Higher than wine detail modal */
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+
+    #filter-modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: auto; /* Auto width based on content */
+      min-width: 300px; /* Minimum width */
+      max-width: 90%;   /* Max width */
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      gap: 15px; /* Space between title, options, and actions */
+    }
+
+    #filterModalTitle {
+      margin-top: 0;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+
+    #filterOptionsContainer {
+      max-height: 60vh; /* Make options scrollable if many */
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px; /* Space between checkboxes */
+    }
+
+    #filterOptionsContainer label {
+      display: block; /* Make labels take full width for easier clicking */
+      cursor: pointer;
+    }
+
+    #filterOptionsContainer input[type="checkbox"] {
+      margin-right: 8px;
+    }
+
+    #filter-modal-actions {
+      display: flex;
+      justify-content: flex-end; /* Align buttons to the right */
+      gap: 10px; /* Space between apply/cancel buttons */
+    }
+
+    .filter-action-button {
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      background-color: #f0f0f0;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    .filter-action-button:hover {
+      background-color: #e0e0e0;
+    }
+
+    #applyFilterBtn {
+      background-color: #4CAF50; /* Green for apply */
+      color: white;
+      border-color: #4CAF50;
+    }
+    #applyFilterBtn:hover {
+      background-color: #45a049;
+    }
+
     #modal-overlay {
       display: none;
       position: fixed;
@@ -277,6 +396,78 @@
       text-align: center;
       overflow-y: auto;
     }
+
+    /* Styles for Category Filter Buttons and Clear Buttons */
+    #category-filters-container {
+        display: flex; /* Align filter groups in a row */
+        gap: 10px; /* Space between filter groups */
+        flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        margin-top: 10px; /* Add some space above */
+    }
+    .filter-button-group {
+      display: flex; /* Align button and its clear icon */
+      align-items: center;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      overflow: hidden; /* Keep clear button visually contained */
+    }
+
+    .filter-button-group .filter-button {
+      border: none; /* Remove individual button border, group has it */
+      border-right: 1px solid #ccc; /* Separator line if clear btn is visible */
+      border-radius: 0; 
+      margin: 0;
+      padding: 6px 10px; 
+      background-color: #f0f0f0;
+      cursor: pointer;
+    }
+    .filter-button-group .filter-button:hover {
+        background-color: #e0e0e0;
+    }
+
+    .filter-button-group .filter-button.active {
+      background-color: #777777; /* Darker gray for active */
+      color: white;
+      border-right-color: #666666; /* Slightly darker gray for separator */
+    }
+    .filter-button-group .filter-button.active:hover {
+      background-color: #666666; /* Slightly darker gray on hover */
+    }
+
+    .clear-filter-btn {
+      display: inline-flex; 
+      align-items: center;
+      justify-content: center;
+      background-color: #f0f0f0;
+      color: #333;
+      width: 28px; 
+      height: 100%; 
+      padding: 6px 0px;
+      cursor: pointer;
+      font-size: 18px; 
+      font-weight: bold;
+      box-sizing: border-box;
+      border:none; /* Handled by group */
+    }
+    .clear-filter-btn:hover {
+      background-color: #e0e0e0;
+      color: #000;
+    }
+    .filter-button-group .filter-button.active + .clear-filter-btn {
+        background-color: white; /* White background for clear button */
+        color: #777777; /* Darker gray 'x' symbol */
+        /* border-left: 1px solid #ccc; */ /* Ensure separator is standard */
+    }
+    .filter-button-group .filter-button.active + .clear-filter-btn:hover {
+        background-color: #f0f0f0; /* Light gray on hover for white button */
+        color: #555555; /* Slightly darker 'x' on hover */
+    }
+    /* Ensure last button in group has rounded corners if no clear button shown */
+    .filter-button-group .filter-button:only-child {
+        border-top-right-radius: 3px;
+        border-bottom-right-radius: 3px;
+        border-right: none; /* No separator if it's the only visible item */
+    }
   </style>
 </head>
 <body>
@@ -298,6 +489,20 @@
         <span class="star">★</span>
       </div>
     </div>
+    <div id="category-filters-container">
+      <div class="filter-button-group">
+        <button id="countryFilterBtn" class="filter-button">Country</button>
+        <span class="clear-filter-btn" id="clearCountryFilterBtn" style="display:none;">&times;</span>
+      </div>
+      <div class="filter-button-group">
+        <button id="producerFilterBtn" class="filter-button">Producer</button>
+        <span class="clear-filter-btn" id="clearProducerFilterBtn" style="display:none;">&times;</span>
+      </div>
+      <div class="filter-button-group">
+        <button id="vintageFilterBtn" class="filter-button">Vintage</button>
+        <span class="clear-filter-btn" id="clearVintageFilterBtn" style="display:none;">&times;</span>
+      </div>
+    </div>
   </div>
 
   <div id="gallery"></div>
@@ -305,15 +510,56 @@
   <div id="modal-overlay">
     <div id="modal-content">
       <button id="modal-close">×</button>
-      <div id="modal-details"></div>
+      <h2 id="modalName"></h2>
+      <p id="modalDetailsLine"></p>
+      <p id="modalRating"></p>
+      <img id="modalImage" src="" alt="Wine Image" style="max-width: 100%; max-height: 50vh; height: auto; object-fit: contain; margin-bottom: 16px;">
+      <p id="modalDescription"></p>
+    </div>
+  </div>
+
+  <div id="filter-modal-overlay">
+    <div id="filter-modal-content">
+      <h3 id="filterModalTitle">Select Filters</h3>
+      <div id="filterOptionsContainer">
+        <!-- Checkboxes will be dynamically inserted here -->
+      </div>
+      <div id="filter-modal-actions">
+        <button id="applyFilterBtn" class="filter-action-button">Apply</button>
+        <button id="cancelFilterBtn" class="filter-action-button">Cancel</button>
+      </div>
     </div>
   </div>
 
   <script>
     const modalOverlay = document.getElementById('modal-overlay');
     const modalContent = document.getElementById('modal-content');
-    const modalDetails = document.getElementById('modal-details');
+    const modalName = document.getElementById('modalName');
+    const modalDetailsLine = document.getElementById('modalDetailsLine');
+    const modalImage = document.getElementById('modalImage');
+    const modalRating = document.getElementById('modalRating');
+    const modalDescription = document.getElementById('modalDescription');
     const modalClose = document.getElementById('modal-close');
+
+    // Filter-related DOM elements
+    const countryFilterBtn = document.getElementById('countryFilterBtn');
+    const producerFilterBtn = document.getElementById('producerFilterBtn');
+    const vintageFilterBtn = document.getElementById('vintageFilterBtn');
+    const filterModalOverlay = document.getElementById('filter-modal-overlay');
+    const filterModalTitle = document.getElementById('filterModalTitle');
+    const filterOptionsContainer = document.getElementById('filterOptionsContainer');
+    const applyFilterBtn = document.getElementById('applyFilterBtn');
+    const cancelFilterBtn = document.getElementById('cancelFilterBtn');
+    const clearCountryFilterBtn = document.getElementById('clearCountryFilterBtn');
+    const clearProducerFilterBtn = document.getElementById('clearProducerFilterBtn');
+    const clearVintageFilterBtn = document.getElementById('clearVintageFilterBtn');
+
+    let imagesData;
+    // Global state for filters
+    let activeCountryFilters = [];
+    let activeProducerFilters = [];
+    let activeVintageFilters = [];
+    let currentFilterType = ''; 
 
     // Close modal when clicking outside or on close button
     modalOverlay.addEventListener('click', (e) => {
@@ -324,10 +570,9 @@
     modalClose.addEventListener('click', () => {
       modalOverlay.style.display = 'none';
     });
-    let imagesData;
 
     // 1) Load metadata
-    fetch('images.json')
+    fetch('wineindex.json')
       .then(res => res.json())
       .then(data => {
         imagesData = data;
@@ -341,22 +586,31 @@
       list.forEach(item => {
         const card = document.createElement('div');
         card.className = 'card';
-        card.innerHTML = `
-          <img src="images/${item.filename}"loading="lazy" alt="">
+
+        const hoverHTML = `
           <div class="hover-overlay">
-            <div class="rating">Rating: ${item.rating}/5</div>
-            <div class="tags">${item.tags.slice(0,3).map(tag => `<span class="tag">#${tag}</span>`).join(' ')}</div>
+            <div>
+              <p>${item.name || 'Unnamed Wine'}</p>
+              <p>${item.producer || 'N/A Producer'} - ${item.vintage || 'N/A Vintage'}</p>
+              <p>${item.country || 'N/A Country'}</p>
+            </div>
+            <span>${item.rating} ★</span>
           </div>
+        `;
+
+        card.innerHTML = `
+          <img src="images/${item.filename}" loading="lazy" alt="${item.name || 'Wine image'}">
+          ${hoverHTML}
         `;
         
         // Add click event to show modal
         card.addEventListener('click', () => {
-          modalDetails.innerHTML = `
-            <img src="images/${item.filename}"loading="lazy" alt="" style="max-width: 100%; max-height: 400px; object-fit: contain;">
-            <h2>Rating: ${item.rating}/5</h2>
-            <p>${item.caption}</p>
-            <div class="tags">${item.tags.map(tag => `<span class="tag">#${tag}</span>`).join(' ')}</div>
-          `;
+          modalName.textContent = item.name || 'Unnamed Wine';
+          modalDetailsLine.textContent = `${item.producer || 'N/A Producer'} - ${item.vintage || 'N/A Vintage'} - ${item.country || 'N/A Country'}`;
+          modalImage.src = `images/${item.filename}`;
+          modalImage.alt = item.name || 'Wine image';
+          modalRating.textContent = `Rating: ${item.rating} ★`;
+          modalDescription.textContent = item.caption || 'No description available.';
           modalOverlay.style.display = 'flex';
         });
 
@@ -392,34 +646,235 @@
     });
 
     function updateRatingStars(rating) {
-      const stars = document.querySelectorAll('.rating-stars .star');
+      const stars = document.querySelectorAll('#ratingStars .star'); // More specific selector
       stars.forEach((star, index) => {
-        if (index < Math.floor(rating)) {
-          star.classList.add('active');
+        const starRatingValue = rating - index;
+        let fillPercentage = 0;
+
+        if (starRatingValue >= 1) {
+          fillPercentage = 100;
+        } else if (starRatingValue >= 0.75) {
+          fillPercentage = 75;
+        } else if (starRatingValue >= 0.5) {
+          fillPercentage = 50;
+        } else if (starRatingValue >= 0.25) {
+          fillPercentage = 25;
+        } else if (starRatingValue > 0) { 
+          fillPercentage = 25; // Treat very small positive as 25%
         } else {
-          star.classList.remove('active');
+          fillPercentage = 0;
+        }
+        
+        fillPercentage = Math.max(0, Math.min(100, fillPercentage)); // Clamp
+
+        star.classList.remove('active'); // Remove old class
+
+        if (fillPercentage > 0) {
+            star.style.backgroundImage = `linear-gradient(to right, gold ${fillPercentage}%, #ddd ${fillPercentage}%)`;
+            star.style.webkitBackgroundClip = 'text';
+            star.style.backgroundClip = 'text';
+            star.style.color = 'transparent';
+        } else {
+            star.style.backgroundImage = 'none';
+            star.style.webkitBackgroundClip = 'initial';
+            star.style.backgroundClip = 'initial';
+            star.style.color = '#ddd'; // Empty star color
         }
       });
     }
 
     function applyFilters() {
-      const q = searchInput.value.toLowerCase();
+      if (!imagesData) return;
+      const searchTerm = searchInput.value.toLowerCase();
       const minRating = parseFloat(ratingSlider.value);
-      
-      // Update visual representation
+
       updateRatingStars(minRating);
 
       const filtered = imagesData.filter(item => {
-        const textMatch = item.caption.toLowerCase().includes(q)
-                        || item.tags.some(t => t.toLowerCase().includes(q));
-        const ratingMatch = item.rating >= minRating;
-        return textMatch && ratingMatch;
+        const nameMatch = item.name ? item.name.toLowerCase().includes(searchTerm) : false;
+        const captionMatch = item.caption ? item.caption.toLowerCase().includes(searchTerm) : false;
+        const producerMatch = item.producer ? item.producer.toLowerCase().includes(searchTerm) : false;
+        const countryMatchText = item.country ? item.country.toLowerCase().includes(searchTerm) : false;
+        const vintageMatchText = item.vintage ? String(item.vintage).toLowerCase().includes(searchTerm) : false;
+        
+        const matchesSearch = searchTerm === '' || nameMatch || captionMatch || producerMatch || countryMatchText || vintageMatchText;
+        const matchesRating = item.rating >= minRating;
+
+        const matchesCountryFilter = activeCountryFilters.length === 0 || (item.country && activeCountryFilters.includes(item.country));
+        const matchesProducerFilter = activeProducerFilters.length === 0 || (item.producer && activeProducerFilters.includes(item.producer));
+        const matchesVintageFilter = activeVintageFilters.length === 0 || (item.vintage && activeVintageFilters.includes(String(item.vintage)));
+
+        return matchesSearch && matchesRating && matchesCountryFilter && matchesProducerFilter && matchesVintageFilter;
       });
       renderGallery(filtered);
     }
 
     // Initial render
     applyFilters();
+
+    // --- Filter Modal Logic ---
+    function openFilterModal(filterType) {
+      if (!imagesData) return; // Ensure data is loaded
+
+      currentFilterType = filterType;
+      filterOptionsContainer.innerHTML = ''; // Clear previous options
+      let title = 'Select ';
+      let valuesMap = new Map(); // To store unique values and their counts
+      let relevantActiveFilters = [];
+
+      // --- Cascading Filter Logic: Start with items that match other active filters ---
+      let itemsToConsider = [...imagesData];
+
+      if (filterType !== 'country' && activeCountryFilters.length > 0) {
+        itemsToConsider = itemsToConsider.filter(item => item.country && activeCountryFilters.includes(item.country));
+      }
+      if (filterType !== 'producer' && activeProducerFilters.length > 0) {
+        itemsToConsider = itemsToConsider.filter(item => item.producer && activeProducerFilters.includes(item.producer));
+      }
+      if (filterType !== 'vintage' && activeVintageFilters.length > 0) {
+        itemsToConsider = itemsToConsider.filter(item => item.vintage && activeVintageFilters.includes(String(item.vintage)));
+      }
+      // --- End Cascading Filter Logic ---
+
+      if (filterType === 'country') {
+        title += 'Countries';
+        itemsToConsider.forEach(item => { // Use itemsToConsider
+          if (item.country && item.country.trim() !== "") {
+            valuesMap.set(item.country, (valuesMap.get(item.country) || 0) + 1);
+          }
+        });
+        relevantActiveFilters = activeCountryFilters;
+      } else if (filterType === 'producer') {
+        title += 'Producers';
+        itemsToConsider.forEach(item => { // Use itemsToConsider
+          if (item.producer && item.producer.trim() !== "") {
+            valuesMap.set(item.producer, (valuesMap.get(item.producer) || 0) + 1);
+          }
+        });
+        relevantActiveFilters = activeProducerFilters;
+      } else if (filterType === 'vintage') {
+        title += 'Vintages';
+        itemsToConsider.forEach(item => { // Use itemsToConsider
+          if (item.vintage && String(item.vintage).trim() !== "") {
+            valuesMap.set(String(item.vintage), (valuesMap.get(String(item.vintage)) || 0) + 1);
+          }
+        });
+        relevantActiveFilters = activeVintageFilters;
+      }
+
+      filterModalTitle.textContent = title;
+
+      const sortedValues = Array.from(valuesMap.entries()).sort((a, b) => {
+        if (b[1] !== a[1]) {
+          return b[1] - a[1];
+        }
+        return String(a[0]).localeCompare(String(b[0]));
+      });
+
+      if (sortedValues.length === 0) {
+        filterOptionsContainer.innerHTML = '<p style="text-align:center; color: #777;">No options available based on current filters.</p>';
+      } else {
+        sortedValues.forEach(([value, count]) => {
+          const checkboxId = `filter-${filterType}-${value.replace(/\s+/g, '-')}`;
+          const label = document.createElement('label');
+          label.htmlFor = checkboxId;
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.id = checkboxId;
+          checkbox.value = value;
+          checkbox.checked = relevantActiveFilters.includes(value);
+          
+          label.appendChild(checkbox);
+          label.appendChild(document.createTextNode(` ${value} (${count})`));
+          filterOptionsContainer.appendChild(label);
+        });
+      }
+      filterModalOverlay.style.display = 'flex';
+    }
+
+    countryFilterBtn.addEventListener('click', () => openFilterModal('country'));
+    producerFilterBtn.addEventListener('click', () => openFilterModal('producer'));
+    vintageFilterBtn.addEventListener('click', () => openFilterModal('vintage'));
+
+    applyFilterBtn.addEventListener('click', () => {
+      const selectedValues = [];
+      filterOptionsContainer.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+        selectedValues.push(checkbox.value);
+      });
+
+      if (currentFilterType === 'country') {
+        activeCountryFilters = selectedValues;
+      } else if (currentFilterType === 'producer') {
+        activeProducerFilters = selectedValues;
+      } else if (currentFilterType === 'vintage') {
+        activeVintageFilters = selectedValues;
+      }
+
+      filterModalOverlay.style.display = 'none';
+      applyFilters();
+      updateFilterButtonsUI(); // Update UI after applying
+    });
+
+    cancelFilterBtn.addEventListener('click', () => {
+      filterModalOverlay.style.display = 'none';
+    });
+
+    filterModalOverlay.addEventListener('click', (e) => {
+      if (e.target === filterModalOverlay) {
+        filterModalOverlay.style.display = 'none';
+      }
+    });
+
+    // --- Update Filter Buttons UI ---
+    function updateFilterButtonsUI() {
+      // Country
+      if (activeCountryFilters.length > 0) {
+        countryFilterBtn.classList.add('active');
+        clearCountryFilterBtn.style.display = 'inline-flex';
+      } else {
+        countryFilterBtn.classList.remove('active');
+        clearCountryFilterBtn.style.display = 'none';
+      }
+      // Producer
+      if (activeProducerFilters.length > 0) {
+        producerFilterBtn.classList.add('active');
+        clearProducerFilterBtn.style.display = 'inline-flex';
+      } else {
+        producerFilterBtn.classList.remove('active');
+        clearProducerFilterBtn.style.display = 'none';
+      }
+      // Vintage
+      if (activeVintageFilters.length > 0) {
+        vintageFilterBtn.classList.add('active');
+        clearVintageFilterBtn.style.display = 'inline-flex';
+      } else {
+        vintageFilterBtn.classList.remove('active');
+        clearVintageFilterBtn.style.display = 'none';
+      }
+    }
+
+    // --- Event Listeners for Clearing Filters ---
+    clearCountryFilterBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent filter button click if inside same wrapper
+      activeCountryFilters = [];
+      applyFilters();
+      updateFilterButtonsUI();
+    });
+
+    clearProducerFilterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      activeProducerFilters = [];
+      applyFilters();
+      updateFilterButtonsUI();
+    });
+
+    clearVintageFilterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      activeVintageFilters = [];
+      applyFilters();
+      updateFilterButtonsUI();
+    });
+
   </script>
 </body>
 </html>
