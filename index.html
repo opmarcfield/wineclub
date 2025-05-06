@@ -468,7 +468,40 @@
         border-bottom-right-radius: 3px;
         border-right: none; /* No separator if it's the only visible item */
     }
-  </style>
+
+@media (max-width: 767px) {
+  .card .hover-overlay {
+    opacity: 1; /* Make it always visible */
+    position: relative; /* Change from absolute to flow below image */
+    background: transparent; /* Remove the dark overlay background */
+    color: #333; /* Set explicit text color for readability on light card bg */
+    padding: 8px; 
+    align-items: flex-start; 
+    justify-content: normal; 
+  }
+
+  /* Remove the hover effect that scales the card on mobile */
+  .card:hover {
+    transform: none; 
+  }
+  .card:hover .hover-overlay {
+     opacity: 1; 
+  }
+}
+
+footer {
+  text-align: center;
+  padding: 20px 0;
+  margin-top: 40px;
+  border-top: 1px solid #ccc; /* Light gray border */
+  font-size: 0.9em;
+  color: #555; /* Dark gray text, assuming light page background */
+}
+
+footer p {
+  margin: 5px 0;
+}
+</style>
 </head>
 <body>
   <div class="search-container">
@@ -876,5 +909,9 @@
     });
 
   </script>
+<footer>
+  <p>© 2025 Pihlajiston Viiniklubi ry. All rights reserved.</p>
+  <p>All content and images on this site are the property of Pihlajiston Viiniklubi ry.</p>
+</footer>
 </body>
 </html>
